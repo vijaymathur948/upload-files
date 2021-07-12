@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "myapp31933d202": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  },
+  "storage": {
+    "s3multiplefileupload": {
+      "service": "S3",
+      "providerPlugin": "awscloudformation"
+    }
+  }
+}
