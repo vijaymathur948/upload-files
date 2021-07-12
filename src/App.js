@@ -24,11 +24,15 @@ const MyUploader = () => {
 
   // receives array of files that are done uploading when submit button is clicked
   const handleSubmit = files => {
-    files.map((f, index) => {
-      console.log("f1", f.meta)
-      handleUpload(f.meta, index + 1)
-      return ""
-    })
+    if (totalProgress === 100) {
+      alert("Already Uploaded files Refesh the page. Try again")
+    } else {
+      files.map((f, index) => {
+        console.log("f1", f.meta)
+        handleUpload(f.meta, index + 1)
+        return ""
+      })
+    }
   }
   const handleUpload = (file, i) => {
     let newFileName = file.name.replace(/\..+$/, "")
