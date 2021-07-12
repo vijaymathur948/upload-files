@@ -6,7 +6,7 @@ import { CircularProgressbar } from "react-circular-progressbar"
 
 import awsconfig from "./aws-exports"
 import Dropzone from "react-dropzone-uploader"
-
+import "./App.css"
 Amplify.configure(awsconfig)
 
 const MyUploader = () => {
@@ -92,32 +92,50 @@ const MyUploader = () => {
   )
 }
 function Upload() {
-  const fileInput = React.useRef()
+  const [files, setFiles] = useState([])
 
+  const fileInput = React.useRef()
+  const handleChange = event => {
+    const list = []
+    const files = [...event.target.files]
+    files.map((obj, index) => {
+      list.push({ index: index, name: obj.name, progress: 0 })
+      return ""
+    })
+    setFiles(list)
+  }
   const handleClick = event => {
     event.preventDefault()
     let newArr = fileInput.current.files
-
+    if (newArr.length === 0) {
+      alert("Please Select the file !")
+    }
     for (let i = 0; i < newArr.length; i++) {
-      handleUpload(newArr[i], i + 1)
+      handleUpload(newArr[i], i)
     }
   }
 
   const handleUpload = (file, i) => {
-    console.log("f2", file)
-
     let newFileName = file.name.replace(/\..+$/, "")
-
     try {
       Storage.put(newFileName, file, {
         progressCallback(progress) {
           const percent = Math.round((progress.loaded / progress.total) * 100)
-          console.log(
-            `fileNo: ${i}, fileName: ${newFileName}, Percentage:  ${percent},}`
-          )
+
+          setFiles(files => {
+            const currentIndex = files.findIndex(obj => obj.index === i)
+            files[currentIndex].progress = percent
+            return [...files]
+          })
+
+          // console.log(
+          //   `fileNo: ${
+          //     i + 1
+          //   }, fileName: ${newFileName}, Percentage:  ${percent},}`
+          // )
         },
       }).then(e => {
-        console.log("uploaded successfully fileNo", i, "fileName ", e)
+        console.log("uploaded successfully fileNo", i + 1, "fileName ", e)
       })
     } catch (error) {
       console.log("Error uploading file: ", error)
@@ -137,18 +155,108 @@ function Upload() {
       <form
         className='upload-steps'
         onSubmit={handleClick}
-        style={{ textAlign: "center", margin: "50px" }}
+        style={{ textAlign: "center", margin: "20px" }}
       >
         <label>
-          Upload file:
-          <input type='file' multiple ref={fileInput} />
+          Upload file: &nbsp;&nbsp;
+          <input type='file' onChange={handleChange} multiple ref={fileInput} />
+          <br />
         </label>
         <br />
-
         <button type='submit'>Upload</button>
+        &nbsp; &nbsp;
+        <button
+          type='reset'
+          onClick={() => {
+            if (files.filter(obj => obj.progress !== 0).length === 0) {
+              console.log("0%")
+              setFiles([])
+            }
+            if (files.filter(obj => obj.progress !== 100).length === 0) {
+              console.log("100%")
+              setFiles([])
+            }
+          }}
+        >
+          Reset
+        </button>
       </form>
+      <br />
+      {false ? (
+        <ol>
+          {files.map((obj, index) => {
+            return (
+              <li
+                key={index}
+                style={{
+                  display: "block",
+                  padding: "5px",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "10px",
+                    display: "inline-block",
+                    width: "300px",
+                  }}
+                >
+                  {index + 1} {obj.name}
+                </div>
+                <div
+                  style={{
+                    marginLeft: "50px",
+                    width: 50,
+                    height: 50,
+                    display: "inline-block",
+                  }}
+                >
+                  <CircularProgressbar
+                    value={obj.progress}
+                    text={`${obj.progress}%`}
+                  />
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      ) : (
+        <>
+          {files.length > 0 && (
+            <table>
+              <tr>
+                <th>File No</th>
+                <th>File Name</th>
+                <th>Percentage</th>
+              </tr>
+              {files.map((obj, index) => {
+                return (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{obj.name}</td>
+                    <td>
+                      <div
+                        style={{
+                          marginLeft: "50px",
+                          width: 50,
+                          height: 50,
+                          display: "inline-block",
+                        }}
+                      >
+                        <CircularProgressbar
+                          value={obj.progress}
+                          text={`${obj.progress}%`}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </table>
+          )}
+        </>
+      )}
     </>
   )
 }
-export default withAuthenticator(MyUploader)
+export default withAuthenticator(Upload)
 //export default Upload;
